@@ -74,18 +74,30 @@ class LyricsApp:
 
         # Set window attributes to always stay on top
         self.root.wm_attributes("-topmost", 1)
+        self.root.overrideredirect(True)
+        # self.root.attributes("-alpha", 0.4)  # 完全透明
+        self.root.attributes("-transparent", True)
+        self.root.config(bg="systemTransparent")
 
-        self.root.configure(bg="black")
+        # move the root to the middle of the screen and botton
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        window_width = 1000
+        window_height = 100
+        # 计算窗口位置
+        x_position = (screen_width - window_width) // 2
+        y_position = screen_height - window_height
 
+        self.root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
         # Example label in the window with larger font
         self.lyrics_label = tk.Label(
             self.root,
             text="This window is always on top!",
-            font=("Helvetica", 24),
+            font=("Helvetica", 40),
             bg="black",
             fg="white",
         )
-        self.lyrics_label.pack(padx=20, pady=20)
+        self.lyrics_label.pack(expand=True)
 
     def run_websocket_server(self):
         loop = asyncio.new_event_loop()
