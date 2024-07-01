@@ -1,5 +1,14 @@
+import re
 import requests
-from unidecode import unidecode
+import os
+import openai
+import json
+
+PATH = os.path.dirname(os.path.abspath(__file__))
+with open(f"{PATH}/api.json", "r") as f:
+    json_data = json.load(f)
+    api_key = json_data["openai"]
+client = openai.Client(api_key=api_key)
 
 
 class StreamServiceBase:
@@ -41,9 +50,62 @@ class StreamServiceBase:
 
         return ""
 
+    def get_lrc_url(self, song_name: str, artist_name: str):
+        song_name = (
+            song_name.replace("feat.", "")
+            .replace("original motion picture soundtrack", "")
+            .replace("from the original motion picture", "")
+        )
+        return f"https://api.lrc.cx/lyrics?title={song_name}&artist={artist_name}"
+
     def get_lyrics(self, song_name: str, artist_name: str):
-        url = self.get_textyl_url(song_name, artist_name)
+        url = self.get_lrc_url(song_name, artist_name)
         if not url:
             return {}
+        lrc = self.check_lrc(url)
+        if not lrc:
+            # try again with new song name
+            song_name = song_name.split("-")[0].strip()
+            url = self.get_lrc_url(song_name, artist_name)
+            lrc = self.check_lrc(url)
+        if not lrc:
+            result = self.call_openai(song_name, artist_name)
+            result = json.loads(result)
+            url = self.get_lrc_url(result["song_name"], result["artist_name"])
+            lrc = self.check_lrc(url)
+        if not lrc:
+            return []
+        # parse lrc
+        result = []
+        print(lrc)
+        for line in lrc.split("\n"):
+            if re.findall(r"\[\d+:\d+\.\d+\]", line):
+                time = line[1:9]
+                lyrics = line[11:]
+                if "0" not in time or "offset" in time:
+                    continue
+                # seconds
+                second = int(time.split(":")[0]) * 60 + int(float(time.split(":")[1]))
+                result.append({"seconds": second, "lyrics": lyrics})
+        return result
+
+    def call_openai(self, song_name, artist_name):
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"帮我找到歌名和歌手,如果是中文歌 只返回中文，歌手也是: {song_name} {artist_name} ,输出json，key是song_name and artist_name",
+                }
+            ],
+            response_format={"type": "json_object"},
+        )
+        print(response.choices)
+        return response.choices[0].message.content
+
+    def check_lrc(self, url):
         result = requests.get(url, verify=False)
-        return result.json()
+        lrc = result.text
+        if "未找到匹配的歌词" in lrc:
+            return None
+        return lrc

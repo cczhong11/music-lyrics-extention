@@ -71,13 +71,15 @@ class LyricsApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Floating Window")
-
+        self.root.transient()
         # Set window attributes to always stay on top
         self.root.wm_attributes("-topmost", 1)
+
         self.root.overrideredirect(True)
         # self.root.attributes("-alpha", 0.4)  # 完全透明
         self.root.attributes("-transparent", True)
         self.root.config(bg="systemTransparent")
+        self.root.wm_attributes("-topmost", 1)
 
         # move the root to the middle of the screen and botton
         screen_width = self.root.winfo_screenwidth()
