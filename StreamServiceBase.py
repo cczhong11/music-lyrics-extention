@@ -3,6 +3,10 @@ import requests
 import os
 import openai
 import json
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 PATH = os.path.dirname(os.path.abspath(__file__))
 with open(f"{PATH}/api.json", "r") as f:
@@ -56,6 +60,7 @@ class StreamServiceBase:
             .replace("original motion picture soundtrack", "")
             .replace("from the original motion picture", "")
         )
+        logger.info(f"Searching for {song_name} by {artist_name}")
         return f"https://api.lrc.cx/lyrics?title={song_name}&artist={artist_name}"
 
     def get_lyrics(self, song_name: str, artist_name: str):
@@ -95,7 +100,7 @@ class StreamServiceBase:
             messages=[
                 {
                     "role": "system",
-                    "content": f"帮我找到歌名和歌手,如果是中文歌 只返回中文，歌手也是: {song_name} {artist_name} ,输出json，key是song_name and artist_name",
+                    "content": f"帮我找到歌名和歌手,如果是中文歌 只返回中文，歌手也是。 格式可能是[歌手] - [歌名]: {song_name} uploader: {artist_name} ,输出json，key是song_name and artist_name",
                 }
             ],
             response_format={"type": "json_object"},
