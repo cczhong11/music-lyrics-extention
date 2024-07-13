@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import partial
 from StreamServiceBase import StreamServiceBase
 import asyncio
@@ -22,23 +23,35 @@ class WebSocketServer:
         self.stream_service = StreamServiceBase()
 
     async def handle_connection(self, ws, path):
-        while True:
-            message = await ws.recv()
-            # print(f"Received message: {message}")
-            res = json.loads(message)
-            self.get_lyrics(res)
-            if (
-                res["currentDuration"] != "NaN"
-                and int(res["currentDuration"]) in self.app.lyrics
-            ):
-                lyric = self.app.lyrics_seconds[int(res["currentDuration"])]
-                self.app.update_lyrics(lyric)
-                self.app.current_seconds = int(res["currentDuration"])
+        try:
+            while True:
+                message = await ws.recv()
+                print(f"Received message: {message}")
+                res = json.loads(message)
+                self.get_lyrics(res)
+                if (
+                    res["currentDuration"] != "NaN"
+                    and int(res["currentDuration"]) in self.app.lyrics
+                ):
+                    lyric = self.app.lyrics_seconds[int(res["currentDuration"])]
+                    self.app.update_lyrics(lyric)
+                    self.app.current_seconds = int(res["currentDuration"])
+                    self.app.logged_timestamp = datetime.now().timestamp()
+        except websockets.exceptions.ConnectionClosedOK:
+            print("Connection closed normally.")
+        except websockets.exceptions.ConnectionClosedError as e:
+            print(f"Connection closed with error: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
 
     async def start(self):
         print("starting server...")
-        server = await websockets.serve(self.handle_connection, "127.0.0.1", self.port)
-        await server.wait_closed()
+        async with websockets.serve(
+            self.handle_connection, "127.0.0.1", self.port
+        ) as server:
+            await server.wait_closed()
+        # server = await websockets.serve(self.handle_connection, "127.0.0.1", self.port)
+        # await server.wait_closed()
 
     # Method to fetch the lyrics based on the song details sent by Chromium extension
     def get_lyrics(self, song_details) -> None:
@@ -86,6 +99,7 @@ class LyricsApp:
         self.lyrics_list = []
         self.lyrics_seconds = {}
         self.current_seconds = 0
+        self.logged_timestamp = 0
         self.root = tk.Tk()
         self.root.title("Floating Window")
         self.root.transient()
@@ -131,11 +145,14 @@ class LyricsApp:
 
     def reset_lyrics(self, index=0):
         logger.info(
-            f"{self.lyrics_list[index]} selected in {self.current_seconds} seconds"
+            f"{self.lyrics_list[index]} selected in {self.current_seconds+int(current_timestamp - self.logged_timestamp)} seconds"
         )
         known_time = self.lyrics_list[index]["seconds"]
         current_time = self.current_seconds
-        offset = current_time - known_time
+        current_timestamp = datetime.now().timestamp()
+        offset = (
+            current_time + int(current_timestamp - self.logged_timestamp) - known_time
+        )
         new_lyrics = {}
         for second in range(self.lyrics_list[-1]["seconds"]):
             try:
