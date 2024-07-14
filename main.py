@@ -127,7 +127,7 @@ class LyricsApp:
             self.root,
             text="Music Lyrics",
             font=("Helvetica", 40),
-            bg="black",
+            bg="systemTransparent",
             fg="white",
         )
         self.lyrics_label.pack(expand=True)

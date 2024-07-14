@@ -100,7 +100,7 @@ class StreamServiceBase:
             messages=[
                 {
                     "role": "system",
-                    "content": f"帮我找到歌名和歌手,如果是中文歌 只返回中文，歌手也是。 格式可能是[歌手] - [歌名]: {song_name} uploader: {artist_name} ,输出json，key是song_name and artist_name",
+                    "content": f"帮我找到歌名和歌手,如果是中文歌 只返回中文，歌手也是。一般书名号里的是歌曲名。 格式可能是[歌手] - [歌名]: {song_name} uploader: {artist_name} ,输出json，key是song_name and artist_name",
                 }
             ],
             response_format={"type": "json_object"},
