@@ -139,6 +139,29 @@ class LyricsApp:
 
         # Bind right-click to the label
         self.lyrics_label.bind("<Button-2>", self.show_menu)
+        # Bind mouse events to functions
+        self.lyrics_label.bind("<Button-1>", self.start_move)
+        self.lyrics_label.bind("<B1-Motion>", self.on_motion)
+        self.lyrics_label.bind("<ButtonRelease-1>", self.stop_move)
+
+        # Initialize position variables
+        self.x = 0
+        self.y = 0
+
+    def start_move(self, event):
+        self.x = event.x
+        self.y = event.y
+
+    def on_motion(self, event):
+        dx = event.x - self.x
+        dy = event.y - self.y
+        x = self.root.winfo_x() + dx
+        y = self.root.winfo_y() + dy
+        self.root.geometry(f"+{x}+{y}")
+
+    def stop_move(self, event):
+        self.x = None
+        self.y = None
 
     def show_menu(self, event):
         self.menu.post(event.x_root, event.y_root)
