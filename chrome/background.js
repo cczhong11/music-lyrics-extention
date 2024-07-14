@@ -28,6 +28,10 @@ function initWebSocket() {
     window.socket.close();
   };
   window.sendSongDetails = () => {
+    if (!window.socket || window.socket.readyState !== WebSocket.OPEN) {
+      console.log("WebSocket is not open");
+      return;
+    }
     let songName,
       currentDuration,
       songArtistsAndAlbum = [];
@@ -60,7 +64,6 @@ function initWebSocket() {
       currentDuration =
         parseInt(currentDuration.split(":")[0]) * 60 +
         parseInt(currentDuration.split(":")[1]);
-      console.log(currentDuration);
     }
 
     if (window.socket && window.socket.readyState === WebSocket.OPEN) {
@@ -81,20 +84,36 @@ function initWebSocket() {
     const observer = new MutationObserver(() => {
       window.sendSongDetails();
     });
-    if (window.location.href.includes("music.youtube.com")) {
-      observer.observe(
-        document
+    const attachObserver = () => {
+      if (window.location.href.includes("music.youtube.com")) {
+        const progressBar = document
           .getElementById("progress-bar")
-          .querySelector(".slider-knob-inner.style-scope.tp-yt-paper-slider"),
-        config
-      );
-    }
+          .querySelector(".slider-knob-inner.style-scope.tp-yt-paper-slider");
+        if (progressBar) {
+          observer.observe(progressBar, config);
+        }
+      }
 
-    if (window.location.href.includes("bilibili.com")) {
-      observer.observe(
-        document.querySelector(".bpx-player-ctrl-time-current"),
-        config
-      );
-    }
+      if (window.location.href.includes("bilibili.com")) {
+        const currentTime = document.querySelector(
+          ".bpx-player-ctrl-time-current"
+        );
+        if (currentTime) {
+          observer.observe(currentTime, config);
+        }
+      }
+    };
+
+    // Initial attachment
+    attachObserver();
+
+    // Reattach observer if the DOM structure changes significantly
+    const pageObserver = new MutationObserver(() => {
+      observer.disconnect(); // Disconnect previous observers
+      attachObserver(); // Reattach observers
+    });
+
+    // Observe significant changes in the body or other key elements
+    pageObserver.observe(document.body, { childList: true, subtree: true });
   }
 }

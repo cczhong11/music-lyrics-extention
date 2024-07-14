@@ -26,7 +26,7 @@ class WebSocketServer:
         try:
             while True:
                 message = await ws.recv()
-                print(f"Received message: {message}")
+                # print(f"Received message: {message}")
                 res = json.loads(message)
                 self.get_lyrics(res)
                 if (
@@ -144,12 +144,14 @@ class LyricsApp:
         self.menu.post(event.x_root, event.y_root)
 
     def reset_lyrics(self, index=0):
+
+        known_time = self.lyrics_list[index]["seconds"]
+        current_time = self.current_seconds
+
+        current_timestamp = datetime.now().timestamp()
         logger.info(
             f"{self.lyrics_list[index]} selected in {self.current_seconds+int(current_timestamp - self.logged_timestamp)} seconds"
         )
-        known_time = self.lyrics_list[index]["seconds"]
-        current_time = self.current_seconds
-        current_timestamp = datetime.now().timestamp()
         offset = (
             current_time + int(current_timestamp - self.logged_timestamp) - known_time
         )
