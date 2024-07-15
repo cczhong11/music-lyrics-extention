@@ -37,6 +37,7 @@ class WebSocketServer:
                     self.app.update_lyrics(lyric)
                     self.app.current_seconds = int(res["currentDuration"])
                     self.app.logged_timestamp = datetime.now().timestamp()
+
         except websockets.exceptions.ConnectionClosedOK:
             print("Connection closed normally.")
         except websockets.exceptions.ConnectionClosedError as e:
@@ -84,6 +85,8 @@ class WebSocketServer:
                 label=line["lyrics"],
                 command=partial(self.app.reset_lyrics, index),
             )
+        self.app.menu.add_separator()
+        self.app.menu.add_command(label="Exit", command=self.root.quit)
         current_line = ""
         for second in range(res[-1]["seconds"]):
             try:
@@ -116,7 +119,7 @@ class LyricsApp:
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         window_width = 1000
-        window_height = 100
+        window_height = 200
         # 计算窗口位置
         x_position = (screen_width - window_width) // 2
         y_position = screen_height - window_height
@@ -160,8 +163,8 @@ class LyricsApp:
         self.root.geometry(f"+{x}+{y}")
 
     def stop_move(self, event):
-        self.x = None
-        self.y = None
+        self.x = 0
+        self.y = 0
 
     def show_menu(self, event):
         self.menu.post(event.x_root, event.y_root)
@@ -198,7 +201,7 @@ class LyricsApp:
         threading.Thread(target=self.run_websocket_server, daemon=True).start()
         self.root.mainloop()
 
-    def update_lyrics(self, lyric):
+    def update_lyrics(self, lyric: str):
         self.lyrics_label.config(text=lyric)
 
 
