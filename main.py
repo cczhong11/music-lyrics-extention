@@ -86,7 +86,7 @@ class WebSocketServer:
                 command=partial(self.app.reset_lyrics, index),
             )
         self.app.menu.add_separator()
-        self.app.menu.add_command(label="Exit", command=self.root.quit)
+        self.app.menu.add_command(label="Exit", command=self.app.root.quit)
         current_line = ""
         for second in range(res[-1]["seconds"]):
             try:
