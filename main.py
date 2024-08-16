@@ -130,7 +130,7 @@ class LyricsApp:
             self.root,
             text="Music Lyrics",
             font=("Helvetica", 40),
-            bg="systemTransparent",
+            bg="grey",
             fg="white",
         )
         self.lyrics_label.pack(expand=True)

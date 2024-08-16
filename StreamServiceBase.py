@@ -61,7 +61,7 @@ class StreamServiceBase:
             .replace("from the original motion picture", "")
         )
         logger.info(f"Searching for {song_name} by {artist_name}")
-        return f"https://api.lrc.cx/lyrics?title={song_name}&artist={artist_name}"
+        return f"https://lrc.tczhong.com/lyrics?title={song_name}&artist={artist_name}"
 
     def get_lyrics(self, song_name: str, artist_name: str):
         url = self.get_lrc_url(song_name, artist_name)
@@ -111,6 +111,6 @@ class StreamServiceBase:
     def check_lrc(self, url):
         result = requests.get(url, verify=False)
         lrc = result.text
-        if "未找到匹配的歌词" in lrc:
+        if "未找到匹配的歌词" in lrc or "Lyrics not found." in lrc:
             return None
         return lrc
